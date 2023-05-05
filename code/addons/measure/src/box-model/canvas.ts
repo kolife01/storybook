@@ -8,7 +8,7 @@ interface Size {
 
 interface CanvasState {
   canvas?: HTMLCanvasElement;
-  context?: CanvasRenderingContext2D;
+  context?: CanvasRenderingContext2D | null;
   width?: number;
   height?: number;
 }
@@ -41,20 +41,22 @@ function createCanvas(): CanvasState {
 }
 
 function setCanvasWidthAndHeight(
-  canvas: HTMLCanvasElement,
-  context: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement | undefined,
+  context: CanvasRenderingContext2D | undefined | null,
   { width, height }: Size
 ) {
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-
-  // Scale
   const scale = global.window.devicePixelRatio;
-  canvas.width = Math.floor(width * scale);
-  canvas.height = Math.floor(height * scale);
-
+  if (canvas !== undefined && canvas !== null) {
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    // Scale
+    canvas.width = Math.floor(width * scale);
+    canvas.height = Math.floor(height * scale);
+  }
   // Normalize coordinate system to use css pixels.
-  context.scale(scale, scale);
+  if (context !== null && context !== undefined) {
+    context.scale(scale, scale);
+  }
 }
 
 let state: CanvasState = {};
@@ -67,13 +69,15 @@ export function init() {
 
 export function clear() {
   if (state.context) {
-    state.context.clearRect(0, 0, state.width, state.height);
+    state.context.clearRect(0, 0, state.width ?? 0, state.height ?? 0);
   }
 }
 
 export function draw(callback: (context: CanvasRenderingContext2D) => void) {
   clear();
-  callback(state.context);
+  if (state.context !== null && state.context !== undefined) {
+    callback(state.context);
+  }
 }
 
 export function rescale() {
@@ -89,7 +93,7 @@ export function rescale() {
 }
 
 export function destroy() {
-  if (state.canvas) {
+  if (state.canvas?.parentNode) {
     clear();
     state.canvas.parentNode.removeChild(state.canvas);
     state = {};

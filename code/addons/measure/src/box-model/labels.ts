@@ -284,8 +284,10 @@ export function labelStacks(
     if (!Object.prototype.hasOwnProperty.call(acc, l.position)) {
       acc[l.position] = [];
     }
-
-    acc[l.position].push(l);
+    if (acc !== undefined) {
+      // Due to a TypeScript type inference issue, using any.
+      (acc as any)[l.position].push(l);
+    }
 
     return acc;
   }, {});
